@@ -15,6 +15,7 @@
 package service
 
 import (
+	"crypto/tls"
 	"errors"
 	"fmt"
 	"io"
@@ -175,7 +176,7 @@ func (this *Server) ListenAndServe(uri string) error {
 	}
 }
 
-func (this *Server) TLSListenAndServe(uri string) error {
+func (this *Server) TLSListenAndServe(uri string, config *tls.Config) error {
 	defer atomic.CompareAndSwapInt32(&this.running, 1, 0)
 
 	if !atomic.CompareAndSwapInt32(&this.running, 0, 1) {
@@ -189,12 +190,12 @@ func (this *Server) TLSListenAndServe(uri string) error {
 		return err
 	}
 
-	this.ln, err = net.Listen(u.Scheme, u.Host)
+	ln, err := net.Listen(u.Scheme, u.Host)
 	if err != nil {
 		return err
 	}
 	defer this.ln.Close()
-
+	this.ln = tls.NewListener(ln, config)
 	glog.Infof("server/ListenAndServe: server is ready...")
 
 	var tempDelay time.Duration // how long to sleep on accept failure
