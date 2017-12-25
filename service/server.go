@@ -19,14 +19,15 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
+	//	"log"
 	"net"
 	"net/url"
 	"sync"
 	"sync/atomic"
 	"time"
 
-	"github.com/surge/glog"
+	//	"github.com/surge/glog"
+	log "github.com/astaxie/beego/logs"
 	"github.com/surgemq/message"
 	"github.com/surgemq/surgemq/auth"
 	"github.com/surgemq/surgemq/sessions"
@@ -140,8 +141,8 @@ func (this *Server) ListenAndServe(uri string) error {
 	}
 	defer this.ln.Close()
 
-	glog.Infof("server/ListenAndServe: server is ready...")
-	log.Println("server/ListenAndServe: server is ready...")
+	//	glog.Infof("server/ListenAndServe: server is ready...")
+	log.Info("server/ListenAndServe: server is ready...")
 
 	var tempDelay time.Duration // how long to sleep on accept failure
 
@@ -167,7 +168,8 @@ func (this *Server) ListenAndServe(uri string) error {
 				if max := 1 * time.Second; tempDelay > max {
 					tempDelay = max
 				}
-				glog.Errorf("server/ListenAndServe: Accept error: %v; retrying in %v", err, tempDelay)
+				//				glog.Errorf("server/ListenAndServe: Accept error: %v; retrying in %v", err, tempDelay)
+				log.Error("server/ListenAndServe: Accept error:", err, "retrying in", tempDelay)
 				time.Sleep(tempDelay)
 				continue
 			}
@@ -199,7 +201,7 @@ func (this *Server) TLSListenAndServe(uri string, config *tls.Config) error {
 	this.ln = tls.NewListener(ln, config)
 	defer this.ln.Close()
 	//	glog.Infof("server/ListenAndServe: server is ready...")
-	log.Println("server/TLSListenAndServe: server is ready...")
+	log.Info("server/TLSListenAndServe: server is ready...")
 	var tempDelay time.Duration // how long to sleep on accept failure
 
 	for {
@@ -224,7 +226,8 @@ func (this *Server) TLSListenAndServe(uri string, config *tls.Config) error {
 				if max := 1 * time.Second; tempDelay > max {
 					tempDelay = max
 				}
-				glog.Errorf("server/ListenAndServe: Accept error: %v; retrying in %v", err, tempDelay)
+				//				glog.Errorf("server/ListenAndServe: Accept error: %v; retrying in %v", err, tempDelay)
+				log.Error("server/ListenAndServe: Accept error:", err, "retrying in", tempDelay)
 				time.Sleep(tempDelay)
 				continue
 			}
@@ -247,7 +250,8 @@ func (this *Server) Publish(msg *message.PublishMessage, onComplete OnCompleteFu
 
 	if msg.Retain() {
 		if err := this.topicsMgr.Retain(msg); err != nil {
-			glog.Errorf("Error retaining message: %v", err)
+			//			glog.Errorf("Error retaining message: %v", err)
+			log.Error("Error retaining message:", err)
 		}
 	}
 
@@ -262,7 +266,8 @@ func (this *Server) Publish(msg *message.PublishMessage, onComplete OnCompleteFu
 		if s != nil {
 			fn, ok := s.(*OnPublishFunc)
 			if !ok {
-				glog.Errorf("Invalid onPublish Function")
+				//				glog.Errorf("Invalid onPublish Function")
+				log.Error("Invalid onPublish Function")
 			} else {
 				(*fn)(msg)
 			}
@@ -284,7 +289,8 @@ func (this *Server) Close() error {
 	this.ln.Close()
 
 	for _, svc := range this.svcs {
-		glog.Infof("Stopping service %d", svc.id)
+		//		glog.Infof("Stopping service %d", svc.id)
+		log.Info("Stopping service", svc.id)
 		svc.stop()
 	}
 
@@ -346,7 +352,7 @@ func (this *Server) handleConnection(c io.Closer) (svc *service, err error) {
 			resp.SetSessionPresent(false)
 			writeMessage(conn, resp)
 		}
-		log.Println(err)
+		log.Error(err)
 		return nil, err
 	}
 
@@ -355,7 +361,7 @@ func (this *Server) handleConnection(c io.Closer) (svc *service, err error) {
 		resp.SetReturnCode(message.ErrBadUsernameOrPassword)
 		resp.SetSessionPresent(false)
 		writeMessage(conn, resp)
-		log.Println(err)
+		log.Error(err)
 		return nil, err
 	}
 
@@ -379,7 +385,8 @@ func (this *Server) handleConnection(c io.Closer) (svc *service, err error) {
 
 	err = this.getSession(svc, req, resp)
 	if err != nil {
-		glog.Errorln(err)
+		//		glog.Errorln(err)
+		log.Error(err)
 		return nil, err
 	}
 
@@ -401,8 +408,8 @@ func (this *Server) handleConnection(c io.Closer) (svc *service, err error) {
 	//this.svcs = append(this.svcs, svc)
 	//this.mu.Unlock()
 
-	glog.Infof("(%s) server/handleConnection: Connection established.", svc.cid())
-	log.Printf("(%s) server/handleConnection: Connection established.", svc.cid())
+	//	glog.Infof("(%s) server/handleConnection: Connection established.", svc.cid())
+	log.Info(svc.cid(), "server/handleConnection: Connection established.")
 
 	return svc, nil
 }

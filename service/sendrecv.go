@@ -21,7 +21,8 @@ import (
 	"net"
 	"time"
 
-	"github.com/surge/glog"
+	//	"github.com/surge/glog"
+	log "github.com/astaxie/beego/logs"
 	"github.com/surgemq/message"
 )
 
@@ -47,15 +48,18 @@ func (this *service) receiver() {
 	defer func() {
 		// Let's recover from panic
 		if r := recover(); r != nil {
-			glog.Errorf("(%s) Recovering from panic: %v", this.cid(), r)
+			//			glog.Errorf("(%s) Recovering from panic: %v", this.cid(), r)
+			log.Error(this.cid(), "Recovering from panic:", r)
 		}
 
 		this.wgStopped.Done()
 
-		glog.Debugf("(%s) Stopping receiver", this.cid())
+		//		glog.Debugf("(%s) Stopping receiver", this.cid())
+		log.Debug(this.cid(), "Stopping receiver")
 	}()
 
-	glog.Debugf("(%s) Starting receiver", this.cid())
+	//	glog.Debugf("(%s) Starting receiver", this.cid())
+	log.Debug(this.cid(), "Starting receiver")
 
 	this.wgStarted.Done()
 
@@ -73,7 +77,8 @@ func (this *service) receiver() {
 
 			if err != nil {
 				if err != io.EOF {
-					glog.Errorf("(%s) error reading from connection: %v", this.cid(), err)
+					//					glog.Errorf("(%s) error reading from connection: %v", this.cid(), err)
+					log.Error(this.cid(), "error reading from connection:", err)
 				}
 				return
 			}
@@ -83,7 +88,8 @@ func (this *service) receiver() {
 	//	glog.Errorf("(%s) Websocket: %v", this.cid(), ErrInvalidConnectionType)
 
 	default:
-		glog.Errorf("(%s) %v", this.cid(), ErrInvalidConnectionType)
+		//		glog.Errorf("(%s) %v", this.cid(), ErrInvalidConnectionType)
+		log.Error(this.cid(), ErrInvalidConnectionType)
 	}
 }
 
@@ -92,15 +98,18 @@ func (this *service) sender() {
 	defer func() {
 		// Let's recover from panic
 		if r := recover(); r != nil {
-			glog.Errorf("(%s) Recovering from panic: %v", this.cid(), r)
+			//			glog.Errorf("(%s) Recovering from panic: %v", this.cid(), r)
+			log.Error(this.cid(), "Recovering from panic:", r)
 		}
 
 		this.wgStopped.Done()
 
-		glog.Debugf("(%s) Stopping sender", this.cid())
+		//		glog.Debugf("(%s) Stopping sender", this.cid())
+		log.Debug(this.cid(), "Stopping sender")
 	}()
 
-	glog.Debugf("(%s) Starting sender", this.cid())
+	//	glog.Debugf("(%s) Starting sender", this.cid())
+	log.Debug(this.cid(), "Starting sender")
 
 	this.wgStarted.Done()
 
@@ -111,7 +120,8 @@ func (this *service) sender() {
 
 			if err != nil {
 				if err != io.EOF {
-					glog.Errorf("(%s) error writing data: %v", this.cid(), err)
+					//					glog.Errorf("(%s) error writing data: %v", this.cid(), err)
+					log.Error(this.cid(), "error writing data:", err)
 				}
 				return
 			}
@@ -121,7 +131,8 @@ func (this *service) sender() {
 	//	glog.Errorf("(%s) Websocket not supported", this.cid())
 
 	default:
-		glog.Errorf("(%s) Invalid connection type", this.cid())
+		//		glog.Errorf("(%s) Invalid connection type", this.cid())
+		log.Error(this.cid(), "Invalid connection type")
 	}
 }
 
@@ -238,7 +249,8 @@ func (this *service) readMessage(mtype message.MessageType, total int) (message.
 	for l < total {
 		n, err = this.in.Read(this.intmp[l:])
 		l += n
-		glog.Debugf("read %d bytes, total %d", n, l)
+		//		glog.Debugf("read %d bytes, total %d", n, l)
+		log.Debug("read", n, "bytes, total", l)
 		if err != nil {
 			return nil, 0, err
 		}

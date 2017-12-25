@@ -20,7 +20,8 @@ import (
 	"io"
 	"reflect"
 
-	"github.com/surge/glog"
+	//	"github.com/surge/glog"
+	log "github.com/astaxie/beego/logs"
 	"github.com/surgemq/message"
 	"github.com/surgemq/surgemq/sessions"
 )
@@ -43,7 +44,8 @@ func (this *service) processor() {
 		//glog.Debugf("(%s) Stopping processor", this.cid())
 	}()
 
-	glog.Debugf("(%s) Starting processor", this.cid())
+	//	glog.Debugf("(%s) Starting processor", this.cid())
+	log.Debug(this.cid(), "Starting processor")
 
 	this.wgStarted.Done()
 
@@ -52,7 +54,8 @@ func (this *service) processor() {
 		mtype, total, err := this.peekMessageSize()
 		if err != nil {
 			//if err != io.EOF {
-			glog.Errorf("(%s) Error peeking next message size: %v", this.cid(), err)
+			//			glog.Errorf("(%s) Error peeking next message size: %v", this.cid(), err)
+			log.Error(this.cid(), "Error peeking next message size:", err)
 			//}
 			return
 		}
@@ -60,7 +63,8 @@ func (this *service) processor() {
 		msg, n, err := this.peekMessage(mtype, total)
 		if err != nil {
 			//if err != io.EOF {
-			glog.Errorf("(%s) Error peeking next message: %v", this.cid(), err)
+			//			glog.Errorf("(%s) Error peeking next message: %v", this.cid(), err)
+			log.Error(this.cid(), "Error peeking next message:", err)
 			//}
 			return
 		}
@@ -73,7 +77,8 @@ func (this *service) processor() {
 		err = this.processIncoming(msg)
 		if err != nil {
 			if err != errDisconnect {
-				glog.Errorf("(%s) Error processing %s: %v", this.cid(), msg.Name(), err)
+				//				glog.Errorf("(%s) Error processing %s: %v", this.cid(), msg.Name(), err)
+				log.Error(this.cid(), "Error processing", msg.Name(), err)
 			} else {
 				return
 			}
@@ -83,7 +88,8 @@ func (this *service) processor() {
 		_, err = this.in.ReadCommit(total)
 		if err != nil {
 			if err != io.EOF {
-				glog.Errorf("(%s) Error committing %d read bytes: %v", this.cid(), total, err)
+				//				glog.Errorf("(%s) Error committing %d read bytes: %v", this.cid(), total, err)
+				log.Error(this.cid(), "Error committing", total, "read bytes:", err)
 			}
 			return
 		}
@@ -182,7 +188,8 @@ func (this *service) processIncoming(msg message.Message) error {
 	}
 
 	if err != nil {
-		glog.Debugf("(%s) Error processing acked message: %v", this.cid(), err)
+		//		glog.Debugf("(%s) Error processing acked message: %v", this.cid(), err)
+		log.Error(this.cid(), "(%s) Error processing acked message: %v", err)
 	}
 
 	return err
@@ -193,23 +200,27 @@ func (this *service) processAcked(ackq *sessions.Ackqueue) {
 		// Let's get the messages from the saved message byte slices.
 		msg, err := ackmsg.Mtype.New()
 		if err != nil {
-			glog.Errorf("process/processAcked: Unable to creating new %s message: %v", ackmsg.Mtype, err)
+			//			glog.Errorf("process/processAcked: Unable to creating new %s message: %v", ackmsg.Mtype, err)
+			log.Error("process/processAcked: Unable to creating new", ackmsg.Mtype, "message:", err)
 			continue
 		}
 
 		if _, err := msg.Decode(ackmsg.Msgbuf); err != nil {
-			glog.Errorf("process/processAcked: Unable to decode %s message: %v", ackmsg.Mtype, err)
+			//			glog.Errorf("process/processAcked: Unable to decode %s message: %v", ackmsg.Mtype, err)
+			log.Error("process/processAcked: Unable to decode", ackmsg.Mtype, "message: %v", err)
 			continue
 		}
 
 		ack, err := ackmsg.State.New()
 		if err != nil {
-			glog.Errorf("process/processAcked: Unable to creating new %s message: %v", ackmsg.State, err)
+			//			glog.Errorf("process/processAcked: Unable to creating new %s message: %v", ackmsg.State, err)
+			log.Error("process/processAcked: Unable to creating new", ackmsg.State, "message: %v", err)
 			continue
 		}
 
 		if _, err := ack.Decode(ackmsg.Ackbuf); err != nil {
-			glog.Errorf("process/processAcked: Unable to decode %s message: %v", ackmsg.State, err)
+			//			glog.Errorf("process/processAcked: Unable to decode %s message: %v", ackmsg.State, err)
+			log.Error("process/processAcked: Unable to decode", ackmsg.State, "message: %v", err)
 			continue
 		}
 
@@ -225,11 +236,13 @@ func (this *service) processAcked(ackq *sessions.Ackqueue) {
 			// If ack is PUBREL, that means the QoS 2 message sent by a remote client is
 			// releassed, so let's publish it to other subscribers.
 			if err = this.onPublish(msg.(*message.PublishMessage)); err != nil {
-				glog.Errorf("(%s) Error processing ack'ed %s message: %v", this.cid(), ackmsg.Mtype, err)
+				//				glog.Errorf("(%s) Error processing ack'ed %s message: %v", this.cid(), ackmsg.Mtype, err)
+				log.Error(this.cid(), "Error processing ack'ed", ackmsg.Mtype, "message:", err)
 			}
 
 		case message.PUBACK, message.PUBCOMP, message.SUBACK, message.UNSUBACK, message.PINGRESP:
-			glog.Debugf("process/processAcked: %s", ack)
+			//			glog.Debugf("process/processAcked: %s", ack)
+			log.Debug("process/processAcked:", ack)
 			// If ack is PUBACK, that means the QoS 1 message sent by this service got
 			// ack'ed. There's nothing to do other than calling onComplete() below.
 
@@ -248,7 +261,8 @@ func (this *service) processAcked(ackq *sessions.Ackqueue) {
 			err = nil
 
 		default:
-			glog.Errorf("(%s) Invalid ack message type %s.", this.cid(), ackmsg.State)
+			//			glog.Errorf("(%s) Invalid ack message type %s.", this.cid(), ackmsg.State)
+			log.Error(this.cid(), "Invalid ack message type", ackmsg.State)
 			continue
 		}
 
@@ -256,10 +270,12 @@ func (this *service) processAcked(ackq *sessions.Ackqueue) {
 		if ackmsg.OnComplete != nil {
 			onComplete, ok := ackmsg.OnComplete.(OnCompleteFunc)
 			if !ok {
-				glog.Errorf("process/processAcked: Error type asserting onComplete function: %v", reflect.TypeOf(ackmsg.OnComplete))
+				//				glog.Errorf("process/processAcked: Error type asserting onComplete function: %v", reflect.TypeOf(ackmsg.OnComplete))
+				log.Error("process/processAcked: Error type asserting onComplete function:", reflect.TypeOf(ackmsg.OnComplete))
 			} else if onComplete != nil {
 				if err := onComplete(msg, ack, nil); err != nil {
-					glog.Errorf("process/processAcked: Error running onComplete(): %v", err)
+					//					glog.Errorf("process/processAcked: Error running onComplete(): %v", err)
+					log.Error("process/processAcked: Error running onComplete():", err)
 				}
 			}
 		}
@@ -323,7 +339,7 @@ func (this *service) processSubscribe(msg *message.SubscribeMessage) error {
 		// yeah I am not checking errors here. If there's an error we don't want the
 		// subscription to stop, just let it go.
 		this.topicsMgr.Retained(t, &this.rmsgs)
-		glog.Debugf("(%s) topic = %s, retained count = %d", this.cid(), string(t), len(this.rmsgs))
+		log.Debug(this.cid(), " topic =", string(t), "retained count =", len(this.rmsgs))
 	}
 
 	if err := resp.AddReturnCodes(retcodes); err != nil {
@@ -336,7 +352,8 @@ func (this *service) processSubscribe(msg *message.SubscribeMessage) error {
 
 	for _, rm := range this.rmsgs {
 		if err := this.publish(rm, nil); err != nil {
-			glog.Errorf("service/processSubscribe: Error publishing retained message: %v", err)
+			//			glog.Errorf("service/processSubscribe: Error publishing retained message: %v", err)
+			log.Error("service/processSubscribe: Error publishing retained message:", err)
 			return err
 		}
 	}
@@ -366,13 +383,15 @@ func (this *service) processUnsubscribe(msg *message.UnsubscribeMessage) error {
 func (this *service) onPublish(msg *message.PublishMessage) error {
 	if msg.Retain() {
 		if err := this.topicsMgr.Retain(msg); err != nil {
-			glog.Errorf("(%s) Error retaining message: %v", this.cid(), err)
+			//			glog.Errorf("(%s) Error retaining message: %v", this.cid(), err)
+			log.Error(this.cid(), "Error retaining message:", err)
 		}
 	}
 
 	err := this.topicsMgr.Subscribers(msg.Topic(), msg.QoS(), &this.subs, &this.qoss)
 	if err != nil {
-		glog.Errorf("(%s) Error retrieving subscribers list: %v", this.cid(), err)
+		//		glog.Errorf("(%s) Error retrieving subscribers list: %v", this.cid(), err)
+		log.Error(this.cid(), "Error retrieving subscribers list:", err)
 		return err
 	}
 
@@ -383,7 +402,8 @@ func (this *service) onPublish(msg *message.PublishMessage) error {
 		if s != nil {
 			fn, ok := s.(*OnPublishFunc)
 			if !ok {
-				glog.Errorf("Invalid onPublish Function")
+				//				glog.Errorf("Invalid onPublish Function")
+				log.Error("Invalid onPublish Function")
 				return fmt.Errorf("Invalid onPublish Function")
 			} else {
 				(*fn)(msg)
