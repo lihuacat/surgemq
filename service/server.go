@@ -19,6 +19,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"net"
 	"net/url"
 	"sync"
@@ -140,6 +141,7 @@ func (this *Server) ListenAndServe(uri string) error {
 	defer this.ln.Close()
 
 	glog.Infof("server/ListenAndServe: server is ready...")
+	log.Println("server/ListenAndServe: server is ready...")
 
 	var tempDelay time.Duration // how long to sleep on accept failure
 
@@ -194,10 +196,10 @@ func (this *Server) TLSListenAndServe(uri string, config *tls.Config) error {
 	if err != nil {
 		return err
 	}
-	defer this.ln.Close()
 	this.ln = tls.NewListener(ln, config)
-	glog.Infof("server/ListenAndServe: server is ready...")
-
+	defer this.ln.Close()
+	//	glog.Infof("server/ListenAndServe: server is ready...")
+	log.Println("server/TLSListenAndServe: server is ready...")
 	var tempDelay time.Duration // how long to sleep on accept failure
 
 	for {
@@ -344,6 +346,7 @@ func (this *Server) handleConnection(c io.Closer) (svc *service, err error) {
 			resp.SetSessionPresent(false)
 			writeMessage(conn, resp)
 		}
+		log.Println(err)
 		return nil, err
 	}
 
@@ -352,6 +355,7 @@ func (this *Server) handleConnection(c io.Closer) (svc *service, err error) {
 		resp.SetReturnCode(message.ErrBadUsernameOrPassword)
 		resp.SetSessionPresent(false)
 		writeMessage(conn, resp)
+		log.Println(err)
 		return nil, err
 	}
 
@@ -375,6 +379,7 @@ func (this *Server) handleConnection(c io.Closer) (svc *service, err error) {
 
 	err = this.getSession(svc, req, resp)
 	if err != nil {
+		glog.Errorln(err)
 		return nil, err
 	}
 
@@ -397,6 +402,7 @@ func (this *Server) handleConnection(c io.Closer) (svc *service, err error) {
 	//this.mu.Unlock()
 
 	glog.Infof("(%s) server/handleConnection: Connection established.", svc.cid())
+	log.Printf("(%s) server/handleConnection: Connection established.", svc.cid())
 
 	return svc, nil
 }
