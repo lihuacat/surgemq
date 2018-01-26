@@ -22,9 +22,9 @@ import (
 
 	//	"github.com/surge/glog"
 	log "github.com/astaxie/beego/logs"
+	"github.com/lihuacat/surgemq/sessions"
+	"github.com/lihuacat/surgemq/topics"
 	"github.com/surgemq/message"
-	"github.com/surgemq/surgemq/sessions"
-	"github.com/surgemq/surgemq/topics"
 )
 
 type (

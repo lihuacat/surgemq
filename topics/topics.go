@@ -26,6 +26,7 @@ import (
 	"errors"
 	"fmt"
 
+	log "github.com/astaxie/beego/logs"
 	"github.com/surgemq/message"
 )
 
@@ -73,6 +74,8 @@ func Register(name string, provider TopicsProvider) {
 	}
 
 	if _, dup := providers[name]; dup {
+		log.Debug("name", name)
+		log.Debug("dup", dup)
 		panic("topics: Register called twice for provider " + name)
 	}
 

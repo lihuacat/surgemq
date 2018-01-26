@@ -13,7 +13,7 @@ func main() {
 	glog.CopyStandardLogTo("INFO")
 	server := service.Server{
 		KeepAlive:      60,
-		ConnectTimeout: 10,
+		ConnectTimeout: 1000,
 		TimeoutRetries: 2,
 	}
 
