@@ -400,6 +400,7 @@ func (this *Server) handleConnection(c io.Closer) (svc *service, err error) {
 	svc.outStat.increment(int64(resp.Len()))
 
 	if err := svc.start(); err != nil {
+		log.Debug("this.svc.stop()")
 		svc.stop()
 		return nil, err
 	}

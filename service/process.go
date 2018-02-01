@@ -39,6 +39,7 @@ func (this *service) processor() {
 		}
 
 		this.wgStopped.Done()
+		log.Debug("this.svc.stop()")
 		this.stop()
 
 		//glog.Debugf("(%s) Stopping processor", this.cid())

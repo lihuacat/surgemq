@@ -22,6 +22,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	log "github.com/astaxie/beego/logs"
 	"github.com/lihuacat/surgemq/sessions"
 	"github.com/lihuacat/surgemq/topics"
 	"github.com/surgemq/message"
@@ -127,6 +128,7 @@ func (this *Client) Connect(uri string, msg *message.ConnectMessage) (err error)
 	}
 
 	if err := this.svc.start(); err != nil {
+		log.Debug("this.svc.stop()")
 		this.svc.stop()
 		return err
 	}
@@ -208,6 +210,7 @@ func (this *Client) TLSConnect(uri string, msg *message.ConnectMessage, config *
 	}
 
 	if err := this.svc.start(); err != nil {
+		log.Debug("this.svc.stop()")
 		this.svc.stop()
 		return err
 	}
@@ -260,6 +263,7 @@ func (this *Client) Ping(onComplete OnCompleteFunc) error {
 // terminates after the sending of the DISCONNECT message.
 func (this *Client) Disconnect() {
 	//msg := message.NewDisconnectMessage()
+	log.Debug("this.svc.stop()")
 	this.svc.stop()
 }
 

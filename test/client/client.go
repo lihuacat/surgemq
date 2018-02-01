@@ -37,7 +37,13 @@ func main() {
 	}
 	// Creates a new SUBSCRIBE message to subscribe to topic "abc"
 	submsg := message.NewSubscribeMessage()
-	err = submsg.AddTopic([]byte("remote/station/#"), 0)
+	err = submsg.AddTopic([]byte("remote/station/#"), 1)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	err = submsg.AddTopic([]byte("remote/command/#"), 1)
 	if err != nil {
 		log.Println(err)
 		return
